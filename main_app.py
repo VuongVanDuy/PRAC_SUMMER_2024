@@ -3,11 +3,12 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import QUrl, QSize, Qt, pyqtSignal
 from PyQt5.QtGui import QIcon, QPixmap, QFont
 from PyQt5.QtWebEngineWidgets import QWebEngineView
-from init_data import init_data_route, get_info_general_routes
 from component.detail.detail import DetailRoute
 from component.authen.authen import AuthWidget
-from component.data_app.data_app import DatabaseManager
+from component.data_app.init_data_route import init_data_route, get_info_general_routes
+from component.data_app.init_data_user import DatabaseManager
 import os
+import hashlib
 
 class BusMapApp(QMainWindow):
     status_logined = pyqtSignal(bool, str)
@@ -153,14 +154,23 @@ class BusMapApp(QMainWindow):
         self.auth_widget.login_form.check_login.connect(self.acceptLogin)
         self.auth_widget.register_form.check_register.connect(self.added_new_user)
     
+    def sha256_hash(self, data):
+        data_bytes = data.encode('utf-8')
+        sha256 = hashlib.sha256()
+        sha256.update(data_bytes)
+    
+        return sha256.hexdigest()
+
     def acceptLogin(self, username, password):
-        password_true = self.data_app.get_password(username)
-        if password_true is None:
+        hash_password_true = self.data_app.get_password(username)
+        hash_password_check = self.sha256_hash(password)
+        
+        if hash_password_true is None:
             QMessageBox.warning(self.auth_widget, 'Login Failed', 'User does not exist!')
             self.auth_widget.login_form.username_input.clear()
             self.auth_widget.login_form.password_input.clear()
             return
-        elif password_true != password:
+        elif hash_password_true != hash_password_check:
             QMessageBox.warning(self.auth_widget, 'Login Failed', 'Password is incorrect!')
             self.auth_widget.login_form.password_input.clear()
             return

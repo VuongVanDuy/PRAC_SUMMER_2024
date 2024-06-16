@@ -3,6 +3,7 @@ import sqlite3
 from PyQt5.QtWidgets import QApplication, QTableView, QVBoxLayout, QWidget
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
+import hashlib
 
 class DatabaseManager:
     def __init__(self, database_name):
@@ -18,8 +19,8 @@ class DatabaseManager:
         try:
             self.cursor.execute('''CREATE TABLE IF NOT EXISTS user(
                                     id INTEGER PRIMARY KEY AUTOINCREMENT, 
-                                    username VARCHAR(20) UNIQUE, 
-                                    password VARCHAR(20) NOT NULL,
+                                    username VARCHAR(20) UNIQUE NOT NULL, 
+                                    password VARCHAR(3000) NOT NULL,
                                     link_icon VARCHAR(100) NOT NULL
                                 );''')
             self.conn.commit()
@@ -28,8 +29,13 @@ class DatabaseManager:
         
     def insert_user(self, username, password, link_icon):
         try:
+            password_bytes = password.encode('utf-8')
+            sha256 = hashlib.sha256()
+            sha256.update(password_bytes)
+            hash_password = sha256.hexdigest()
+    
             self.cursor.execute('''INSERT INTO user(username, password, link_icon) 
-                                VALUES (?, ?, ?)''', (username, password, link_icon))
+                                VALUES (?, ?, ?)''', (username, hash_password, link_icon))
             self.conn.commit()
             return True
         except Exception as e:
@@ -61,8 +67,10 @@ class DatabaseManager:
                                         comment = excluded.comment,
                                         time = CURRENT_TIMESTAMP;''', (id_user, id_route, star_vote, comment))
             self.conn.commit()
+            return True
         except Exception as e:
             print(e)
+            return False
     
     def update_link_icon(self, name_user, link_icon):
         try:
@@ -162,45 +170,45 @@ class EmployeeTableView(QWidget):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
-    db_manager = DatabaseManager("data_app.db")
+    db_manager = DatabaseManager("./data/data.db")
    
     # 10 users in list
-    list_users = [
-        ("user1", "password1", "./pictures/avatar_default.png"),
-        ("user2", "password2", "./pictures/avatar_default.png"),
-        ("user3", "password3", "./pictures/avatar_default.png"),
-        ("user4", "password4", "./pictures/avatar_default.png"),
-        ("user5", "password5", "./pictures/avatar_default.png"),
-        ("user6", "password6", "./pictures/avatar_default.png"),
-        ("user7", "password7", "./pictures/avatar_default.png"),
-        ("user8", "password8", "./pictures/avatar_default.png"),
-        ("user9", "password9", "./pictures/avatar_default.png"),
-        ("user10", "password10", "./pictures/avatar_default.png")
-    ]
-    for user in list_users:
-        db_manager.insert_user(user[0], user[1], user[2])
+    # list_users = [
+    #     ("user1", "password1", "./pictures/avatar_default.png"),
+    #     ("user2", "password2", "./pictures/avatar_default.png"),
+    #     ("user3", "password3", "./pictures/avatar_default.png"),
+    #     ("user4", "password4", "./pictures/avatar_default.png"),
+    #     ("user5", "password5", "./pictures/avatar_default.png"),
+    #     ("user6", "password6", "./pictures/avatar_default.png"),
+    #     ("user7", "password7", "./pictures/avatar_default.png"),
+    #     ("user8", "password8", "./pictures/avatar_default.png"),
+    #     ("user9", "password9", "./pictures/avatar_default.png"),
+    #     ("user10", "password10", "./pictures/avatar_default.png")
+    # ]
+    # for user in list_users:
+    #     db_manager.insert_user(user[0], user[1], user[2])
     
-    # 5 comments of users
-    list_review_of_user = [
-        (1, 1063, 5, "comment1"),
-        (2, 1064, 4, "comment2"),
-        (3, 1065, 3, "comment3"),
-        (4, 1062, 2, "comment4"),
-        (5, 1062, 1, "comment5")
-    ]
-    for review in list_review_of_user:
-        db_manager.insert_review_of_user(review[0], review[1], review[2], review[3])
+    # # 5 comments of users
+    # list_review_of_user = [
+    #     (1, 1063, 5, "comment1"),
+    #     (2, 1064, 4, "comment2"),
+    #     (3, 1065, 3, "comment3"),
+    #     (4, 1062, 2, "comment4"),
+    #     (5, 1062, 1, "comment5")
+    # ]
+    # for review in list_review_of_user:
+    #     db_manager.insert_review_of_user(review[0], review[1], review[2], review[3])
     
-    db_manager.insert_review_of_user(1, 1062, 5, "fixed comment1")
+    # db_manager.insert_review_of_user(1, 1062, 5, "fixed comment1")
 
     
     users_data = db_manager.fetch_all_users()
     reviews_user = db_manager.fetch_all_reviews_of_route(1062)
-    print(reviews_user)
+ 
     users_headers = ["ID", "Username", "Password", "Link Icon"]
     review_headers = ["ID", "ID_User", "Star vote", "Comment"]
     
-    view = EmployeeTableView(reviews_user, review_headers)
+    view = EmployeeTableView(users_data, users_headers)
     view.show()
     
     sys.exit(app.exec_())
