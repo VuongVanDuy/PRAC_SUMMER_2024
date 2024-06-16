@@ -1,7 +1,7 @@
 import folium
 import webbrowser
 import os
-from init_data import init_data_route
+from component.data_app.init_data_route import init_data_route
 
 m = folium.Map(location=[59.9343, 30.3351], zoom_start=12)
 
@@ -28,13 +28,14 @@ def draw_route(route_coordinates, route_id, direction):
         folium.PolyLine(locations=route_coordinates, color='blue').add_to(m)
         folium.Marker(location=route_coordinates[0], popup="Bus").add_to(m)
         
-        map_file = f"./map/direction_{direction}/{route_id}.html"
-        if os.path.exists(map_file):
-            print(f"{map_file} already exists. Exiting.")
-            return
-        else:
-            m.save(map_file)
-
+        # map_file = f"./map/direction_{direction}/{route_id}.html"
+        # if os.path.exists(map_file):
+        #     print(f"{map_file} already exists. Exiting.")
+        #     return
+        # else:
+        #     m.save(map_file)
+        map_file = 'map.html'
+        m.save(map_file)
         #webbrowser.open(map_file)
     else:
         print("Failed to retrieve route coordinates or insufficient coordinates.")
