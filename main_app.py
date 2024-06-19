@@ -5,8 +5,8 @@ from PyQt5.QtGui import QIcon, QPixmap, QFont
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from component.detail.detail import DetailRoute
 from component.authen.authen import AuthWidget
-from component.get_data_api.init_data_route import init_data_route, get_info_general_routes
-from component.get_data_api.init_data_user import DatabaseManager
+from component.data_app.init_data_route import init_data_route, get_info_general_routes
+from component.data_app.init_data_user import DatabaseManager
 import os
 import hashlib
 
@@ -123,7 +123,7 @@ class BusMapApp(QMainWindow):
         # Add bus info widgets
         self.all_routes = get_info_general_routes()
         for route in self.all_routes:
-            scroll_content_layout.addWidget(self.create_bus_info(route['id'], route['long_name'], route['ticket'], route['time']))
+            scroll_content_layout.addWidget(self.create_bus_info(route[0], route[1], route[2], route[3]))
         
         scroll_area.setWidget(scroll_content)
         
