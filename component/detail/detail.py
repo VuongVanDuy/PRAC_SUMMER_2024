@@ -20,7 +20,7 @@ class DetailRoute(QWidget):
         
         self.routeId = self.info_route.routeId
         self.direction = self.info_route.direction
-        self.stops = list(self.info_route.get_stops_of_route().keys())
+        self.stops = list(self.info_route.stops_route.keys())
         
         self.setFixedWidth(470)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
