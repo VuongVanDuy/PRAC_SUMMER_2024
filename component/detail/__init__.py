@@ -1,22 +1,21 @@
 import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore  import pyqtSignal
-from PyQt5.QtCore import Qt
-from .tab2.button_stops import CustomWidget
-from .tab3.info_route import InfoRoute
-from .tab4.evaluation import ReviewWidget
+from .tab2 import tab2
+from .tab3 import tab3
+from .tab4 import tab4
 from .tab4.write_review import ReviewForm
 
 class DetailRoute(QWidget):
     changedAddr = pyqtSignal(str)
     changedDirection = pyqtSignal(int)
     
-    def __init__(self, info_route, status_login, username, data_app):
+    def __init__(self, info_route, status_login, username, data_users):
         super().__init__()
         self.info_route = info_route
         self.status_login = status_login
         self.username = username
-        self.data_app = data_app
+        self.data_users = data_users
         
         self.routeId = self.info_route.routeId
         self.direction = self.info_route.direction
@@ -30,32 +29,6 @@ class DetailRoute(QWidget):
         layout.addWidget(self.frame_detail)
         self.setLayout(layout)  
 
-    def update_direction(self, route_with_new_direction):
-        self.info_route = route_with_new_direction
-        self.direction = self.info_route.direction
-        self.stops = list(self.info_route.get_stops_of_route().keys())
-        
-        self.scroll_content_layout.removeWidget(self.custom_widget)
-        self.custom_widget = CustomWidget(self.stops)
-        for button in self.custom_widget.buttons:
-            button.clicked.connect(self.on_button_click)
-        self.scroll_content_layout.addWidget(self.custom_widget)
-    
-        self.scroll_content_layout_3.removeWidget(self.info_widget)
-        type_route = "исходящий маршрут" if self.direction == 0 else "обратный маршрут"
-        bus_info = [
-            f"Номер маршрута: {self.routeId}",
-            f"Название маршрута: {self.info_route.name_route}",
-            f"Тип маршрута: {type_route}",
-            f"Стоимость билета: {self.info_route.ticket_price}",
-            f"Время работы: {self.info_route.time}",
-            f"Остановки: {' ➞ '.join(self.stops)}"
-        ]
-        self.info_widget = InfoRoute(bus_info)
-        self.scroll_content_layout_3.addWidget(self.info_widget)
-        
-        self.btn_route_go.setEnabled(self.direction != 0)
-        self.btn_route_return.setEnabled(self.direction != 1)
     
     def update_status_login(self, status_login, username):
         self.status_login = status_login
@@ -115,47 +88,12 @@ class DetailRoute(QWidget):
         self.tab_widget.addTab(self.tab1, "График")
         
     def create_tab2(self):
-        self.tab2 = QWidget()
-        layout_tab2 = QVBoxLayout(self.tab2)
-        scroll_frame = QFrame()
-        scroll_layout = QVBoxLayout(scroll_frame)
-        
-        # Create scroll area
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        
-        scroll_content = QWidget()
-        self.scroll_content_layout = QVBoxLayout(scroll_content)
-        
-        self.custom_widget = CustomWidget(self.stops)
-        for button in self.custom_widget.buttons:
+        self.tab2 = tab2(self.stops)
+        for button in self.tab2.custom_widget.buttons:
             button.clicked.connect(self.on_button_click)
-        self.scroll_content_layout.addWidget(self.custom_widget)
-        #scroll_content_layout.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-        scroll_area.setWidget(scroll_content)
-        
-        # Add scroll area to the scroll frame layout
-        scroll_layout.addWidget(scroll_area)
-
-        # Add scroll frame to tab layout
-        layout_tab2.addWidget(scroll_frame)
-        
-        self.tab2.setLayout(layout_tab2)
         self.tab_widget.addTab(self.tab2, "Остановка")
     
     def create_tab3(self):
-        self.tab3 = QWidget()
-        layout_tab3 = QVBoxLayout(self.tab3)
-        scroll_frame = QFrame()
-        scroll_layout = QVBoxLayout(scroll_frame)
-        
-        # Create scroll area
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        
-        scroll_content = QWidget()
-        self.scroll_content_layout_3 = QVBoxLayout(scroll_content)
-        
         type_route = "исходящий маршрут" if self.direction == 0 else "обратный маршрут"
         bus_info = [
             f"Номер маршрута: {self.routeId}",
@@ -165,45 +103,22 @@ class DetailRoute(QWidget):
             f"Время работы: {self.info_route.time}",
             f"Остановки: {' ➞ '.join(self.stops)}"
         ]
-        self.info_widget = InfoRoute(bus_info)
-        self.scroll_content_layout_3.addWidget(self.info_widget)
-        scroll_area.setWidget(scroll_content)
-        scroll_layout.addWidget(scroll_area)
-        layout_tab3.addWidget(scroll_frame)
-        self.tab3.setLayout(layout_tab3)
-        
+        self.tab3 = tab3(bus_info)
         self.tab_widget.addTab(self.tab3, "Информация")
     
     def create_tab4(self):
-        self.tab4 = QWidget()
-        layout_tab4 = QVBoxLayout(self.tab4)
-        layout_tab4.setContentsMargins(0, 0, 0, 0)
-        
-        scroll_frame = QFrame()
-        scroll_layout = QVBoxLayout(scroll_frame)
-        
-        # Create scroll area
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        
-        scroll_content = QWidget()
-        self.scroll_content_layout_4 = QVBoxLayout(scroll_content)
-        self.scroll_content_layout_4.setContentsMargins(0, 0, 0, 0)
-        
-        reviews = self.data_app.fetch_all_reviews_of_route(self.routeId)
-        self.reviews = ReviewWidget(reviews)
-        self.scroll_content_layout_4.addWidget(self.reviews)
-        scroll_area.setWidget(scroll_content)
-        scroll_layout.addWidget(scroll_area)
-        layout_tab4.addWidget(scroll_frame)
-        self.tab4.setLayout(layout_tab4)
-        
+        result = self.data_users.get_reviews_of_route(self.routeId) #fetch_all_reviews_of_route
+        reviews = []
+        for review in result:
+            reviews.append([review['username'], review['star_vote'], review['comment'], review['time'], review['link_icon']])
+            
+        self.tab4 = tab4(reviews)
         self.tab_widget.addTab(self.tab4, "Оценка")
-        self.reviews.write_review_button.clicked.connect(self.write_review)
+        self.tab4.reviewWidget.write_review_button.clicked.connect(self.write_review)
         
     def write_review(self):
         if self.status_login:
-            link_icon = self.data_app.get_link_icon(self.username)
+            link_icon = self.data_users.get_user_link_icon(self.username)
             self.review_form = ReviewForm(self.routeId, self.username, link_icon)
             self.review_form.show()
             self.review_form.request_review.connect(self.add_review)
@@ -211,10 +126,16 @@ class DetailRoute(QWidget):
             QMessageBox.warning(self, 'Оценка', 'Вы должны войти в систему, чтобы оценить маршрут')
 
     def add_review(self, rating, comment):
-        id_user = self.data_app.get_id_user(self.username)
-        self.data_app.insert_review_of_user(id_user, self.routeId, rating, comment)
-        self.reviews.reviews = self.data_app.fetch_all_reviews_of_route(self.routeId)
-        self.reviews.set_list_reviews()
+        id_user = self.data_users.get_id_user(self.username)
+        self.data_users.add_review(id_user, self.routeId, rating, comment)
+        
+        result = self.data_users.get_reviews_of_route(self.routeId) #fetch_all_reviews_of_route
+        reviews = []
+        for review in result:
+            reviews.append([review['username'], review['star_vote'], review['comment'], review['time'], review['link_icon']])
+            
+        self.tab4.reviewWidget.reviews = reviews
+        self.tab4.reviewWidget.set_list_reviews()
         self.review_form.close()
         
     def toggle_visibility(self):
@@ -227,12 +148,37 @@ class DetailRoute(QWidget):
     
     def on_button_click(self):
         sender = self.sender()
-        for i in range(len(self.custom_widget.buttons)):
-            if sender == self.custom_widget.buttons[i]:
-                self.custom_widget.buttons[i].setStyleSheet(self.custom_widget.get_button_style(True))
-                self.changedAddr.emit(self.custom_widget.nameAddr[i].text())
+        for i in range(len(self.tab2.custom_widget.buttons)):
+            if sender == self.tab2.custom_widget.buttons[i]:
+                self.tab2.custom_widget.buttons[i].setStyleSheet(self.tab2.custom_widget.get_button_style(True))
+                self.changedAddr.emit(self.tab2.custom_widget.nameAddr[i].text())
             else:
-                self.custom_widget.buttons[i].setStyleSheet(self.custom_widget.get_button_style(False))
+                self.tab2.custom_widget.buttons[i].setStyleSheet(self.tab2.custom_widget.get_button_style(False))
+                
+    def update_direction(self, route_with_new_direction):
+        self.info_route = route_with_new_direction
+        self.direction = self.info_route.direction
+        self.stops = list(self.info_route.get_stops_of_route().keys())
+        
+        # update layout tab 2
+        self.tab2.update_layout_tab(self.stops)
+        for button in self.tab2.custom_widget.buttons:
+            button.clicked.connect(self.on_button_click)
+
+        # update layout tab 3
+        type_route = "исходящий маршрут" if self.direction == 0 else "обратный маршрут"
+        new_bus_info = [
+            f"Номер маршрута: {self.routeId}",
+            f"Название маршрута: {self.info_route.name_route}",
+            f"Тип маршрута: {type_route}",
+            f"Стоимость билета: {self.info_route.ticket_price}",
+            f"Время работы: {self.info_route.time}",
+            f"Остановки: {' ➞ '.join(self.stops)}"
+        ]
+        self.tab3.update_layout_tab(new_bus_info)
+        
+        self.btn_route_go.setEnabled(self.direction != 0)
+        self.btn_route_return.setEnabled(self.direction != 1)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

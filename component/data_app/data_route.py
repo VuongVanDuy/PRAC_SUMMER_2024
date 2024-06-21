@@ -78,7 +78,7 @@ def get_info_general_routes():
     routes = []
     routesId = get_all_routesId()
     for routeId in routesId:
-        routes.append([routeId, data_all_routes[routeId], '6:00 - 24:00', '60 рублей (к. Виза) - 45 рублей (к. Мир)'])
+        routes.append([int(routeId), data_all_routes[routeId], '6:00 - 24:00', '60 рублей (к. Виза) - 45 рублей (к. Мир)'])
     return routes  
 
 if __name__ == '__main__':

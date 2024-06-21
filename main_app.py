@@ -3,10 +3,9 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import QUrl, QSize, Qt, pyqtSignal
 from PyQt5.QtGui import QIcon, QPixmap, QFont
 from PyQt5.QtWebEngineWidgets import QWebEngineView
-from component.detail.detail import DetailRoute
-from component.authen.authen import AuthWidget
-from component.data_app.init_data_route import init_data_route, get_info_general_routes
-from component.data_app.init_data_user import DatabaseManager
+from component.detail import DetailRoute
+from component.authen import AuthWidget
+from component.data_app import *
 import os
 import hashlib
 
@@ -19,7 +18,7 @@ class BusMapApp(QMainWindow):
         self.status_login = False
         self.username = None
         self.password = None
-        self.data_app = DatabaseManager("./data/data.db")
+        self.data_users = DataUsers()
         self.setWindowTitle('BusMap')
         self.setGeometry(100, 100, 1200, 700)
         self.setWindowIcon(QIcon('./pictures/bus_app.png'))
@@ -162,7 +161,7 @@ class BusMapApp(QMainWindow):
         return sha256.hexdigest()
 
     def acceptLogin(self, username, password):
-        hash_password_true = self.data_app.get_password(username)
+        hash_password_true = self.data_users.get_user_password(username)
         hash_password_check = self.sha256_hash(password)
         
         if hash_password_true is None:
@@ -182,7 +181,7 @@ class BusMapApp(QMainWindow):
             self.status_logined.emit(True, self.username)
             self.login_button.setText(' Выйти')
             self.icon_btn = QPushButton()
-            link_icon = self.data_app.get_link_icon(username)
+            link_icon = self.data_users.get_user_link_icon(username)
             self.icon_btn.setIcon(QIcon(link_icon))
             self.icon_btn.setFixedSize(30, 30)  
             self.icon_btn.setIconSize(QSize(30, 30))
@@ -207,22 +206,23 @@ class BusMapApp(QMainWindow):
             self.login_button.clicked.disconnect(self.showLogin)
     
     def added_new_user(self, username, password, link_icon='./pictures/avatar_default.png'):
-        if self.data_app.insert_user(username, password, link_icon):
+        if self.data_users.add_user(username, password, link_icon):
             QMessageBox.information(self.auth_widget, 'Registration Successful', f'User {username} registered successfully!')
         else:
             QMessageBox.warning(self.auth_widget, 'Registration Failed', f'User {username} already exists!')
             
     def changeIconUser(self):
         options = QFileDialog.Options()
-        file_path, _ = QFileDialog.getOpenFileName(self, "Choose New Icon", "", "Images (*.png *.xpm *.jpg);;All Files (*)", options=options)
-        confirm = self.ask_user_confirm_active("Вы уверены, что хотите изменить иконку пользователя?")
+        file_path, _ = QFileDialog.getOpenFileName(self, "Choose New Icon", "", "Images (*.png *.xpm *.jpg);All Files (*)", options=options)
+        if file_path:
+            confirm = self.ask_user_confirm_active("Вы уверены, что хотите изменить иконку пользователя?")
         
         if file_path and confirm:
             self.icon_btn.setIcon(QIcon(file_path))
             dir_root_file = os.path.dirname(file_path)
             dir_root_dir = os.path.dirname(dir_root_file)
             relative_path = './' + os.path.relpath(file_path, dir_root_dir).replace('\\', '/')
-            self.data_app.update_link_icon(self.username, relative_path)
+            self.data_users.update_link_icon(self.username, relative_path)
             QMessageBox.information(self, 'Change Icon Successful', 'Change icon successful!')
     
     def logout(self):
@@ -313,7 +313,7 @@ class BusMapApp(QMainWindow):
             print(e)
         
         self.frame_tabs.setVisible(False)
-        self.frame_detail = DetailRoute(self.cur_data_route, self.status_login, self.username, self.data_app)
+        self.frame_detail = DetailRoute(self.cur_data_route, self.status_login, self.username, self.data_users)
         self.body_layout.insertWidget(0, self.frame_detail)
         #self.main_widget.setLayout(self.main_layout)   
         self.showRoute(f"./map/direction_{self.direction}/{route}" + ".html")   
