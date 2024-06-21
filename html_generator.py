@@ -11,13 +11,6 @@ def getCoords(routeId, direction):
     return data_route.get_coords_route()
 
 
-# def get_schedule(stop_id):
-#     response = requests.get(f"https://spb-transport.gate.petersburg.ru/api/stop/{stop_id}")
-#     data = response.json()
-#     schedules = data["result"][0]["schedules"]
-#     return schedules
-
-
 def draw_route(route_coordinates, route_id, direction):
     global m
 
