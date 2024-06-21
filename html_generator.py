@@ -1,7 +1,7 @@
 import folium
 import webbrowser
 import os
-from init_data import init_data_route
+from component.data_app import *
 
 m = folium.Map(location=[59.9343, 30.3351], zoom_start=12)
 
