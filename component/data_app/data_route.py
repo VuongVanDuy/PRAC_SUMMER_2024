@@ -1,5 +1,6 @@
 import json
 import os
+import requests
 
 # Function to read a JSON file and return its content
 class init_data_route():
@@ -81,10 +82,21 @@ def get_info_general_routes():
         routes.append([int(routeId), data_all_routes[routeId], '6:00 - 24:00', '60 рублей (к. Виза) - 45 рублей (к. Мир)'])
     return routes  
 
+BASE_URl = 'http://127.0.0.1:5000'
+
+def get_info_update():
+    url = f"{BASE_URl}/info-update"
+    response = requests.get(url)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return None
+
 if __name__ == '__main__':
     data_route = init_data_route('1062', 0)
-    print(data_route.get_stops_of_route())
+    #print(data_route.get_stops_of_route())
     res = data_route.get_coords_route()
     #print(data_route.data_stops)
+    print(get_info_general_routes())
 
 

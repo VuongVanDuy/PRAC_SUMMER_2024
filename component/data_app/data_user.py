@@ -1,9 +1,7 @@
 import sys
 import requests
 from PyQt5.QtWidgets import QApplication, QTableView, QVBoxLayout, QWidget
-from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
-import hashlib
 
 class DataUsers:
     def __init__(self):
@@ -17,7 +15,10 @@ class DataUsers:
     def get_users(self):
         url = f"{self.base_url}/users"
         response = requests.get(url, headers=self.headers)
-        return response.json()
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return None
 
     # Hàm để thêm người dùng mới
     def add_user(self, username, password, link_icon):
@@ -28,7 +29,10 @@ class DataUsers:
             'link_icon': link_icon
         }
         response = requests.post(url, headers=self.headers, json=data)
-        return response.json()
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return None
 
     # Hàm để cập nhật link_icon của người dùng
     def update_link_icon(self, username, link_icon):
@@ -37,7 +41,10 @@ class DataUsers:
             'link_icon': link_icon
         }
         response = requests.put(url, headers=self.headers, json=data)
-        return response.json()
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return None
 
     # Hàm để cập nhật mật khẩu của người dùng
     def update_password(self, username, password):
@@ -46,36 +53,50 @@ class DataUsers:
             'password': password
         }
         response = requests.put(url, headers=self.headers, json=data)
-        return response.json()
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return None
 
     # Hàm để lấy mật khẩu của người dùng
     def get_user_password(self, username):
         url = f"{self.base_url}/user/{username}/password"
         response = requests.get(url, headers=self.headers)
-        result = response.json()
-        return result['password']
+        if response.status_code == 200:
+            result = response.json()
+            return result['password']
+        else:
+            return None
 
     # Hàm để lấy link_icon của người dùng
     def get_user_link_icon(self, username):
         url = f"{self.base_url}/user/{username}/link_icon"
         response = requests.get(url, headers=self.headers)
-        result = response.json()
-        return result['link_icon']
+        if response.status_code == 200:
+            result = response.json()
+            return result['link_icon']
+        else:
+            return None
 
     # Hàm để lấy ID của người dùng
     def get_id_user(self, username):
         url = f"{self.base_url}/user/{username}/id_user"
         response = requests.get(url, headers=self.headers)
-        result = response.json()
-        return result['id_user']
+        if response.status_code == 200:
+            result = response.json()
+            return result['id_user']
+        else:
+            return None
 
-    
     # Hàm để lấy tất cả đánh giá của một tuyến đường
     def get_reviews_of_route(self, id_route):
         url = f"{self.base_url}/reviews/{id_route}"
         response = requests.get(url, headers=self.headers)
-        result = response.json()
-        return result['result']
+        if response.status_code == 200:
+            result = response.json()
+            return result['result']
+        else:
+            return None
     
     # Hàm để thêm đánh giá mới
     def add_review(self, id_user, id_route, star_vote, comment):
@@ -89,7 +110,10 @@ class DataUsers:
         try:
             response = requests.post(url, headers=self.headers, json=data)
             response.raise_for_status()  # Kiểm tra lỗi HTTP
-            return response.json()
+            if response.status_code == 200:
+                return response.json()
+            else:
+                return None
         except requests.exceptions.HTTPError as http_err:
             print(f"HTTP error occurred: {http_err}")
             return None
@@ -97,7 +121,6 @@ class DataUsers:
             print(f"Other error occurred: {err}")
             return None
 
-        
 class EmployeeTableView(QWidget):
     def __init__(self, data, headers):
         super().__init__()
