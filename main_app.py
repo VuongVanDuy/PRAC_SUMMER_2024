@@ -1,14 +1,11 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
-from PyQt5.QtCore import QSize, pyqtSignal
+from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QIcon
-from component.data_app import *
 from component.header_frame import header_frame
 from component.body_frame import body_frame
 
 class BusMapApp(QMainWindow):
-    status_logined = pyqtSignal(bool, str)
-    
     def __init__(self):
         super().__init__()
 
@@ -30,7 +27,8 @@ class BusMapApp(QMainWindow):
         self.body_frame = body_frame()
         self.body_layout.addWidget(self.body_frame)
         self.main_layout.addLayout(self.body_layout)
-    
+        
+        self.header_frame.status_logined.connect(self.body_frame.detail_widget.update_status_login)
     
 if __name__ == '__main__':
     app = QApplication(sys.argv)

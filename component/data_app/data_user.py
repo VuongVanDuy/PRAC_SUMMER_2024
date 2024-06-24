@@ -6,62 +6,91 @@ from PyQt5.QtGui import QStandardItemModel, QStandardItem
 class DataUsers:
     def __init__(self):
         self.base_url = 'http://127.0.0.1:5000'
-        self.token = 'token1'
-        self.headers = {
-                        'Authorization': self.token,
-                        'Content-Type': 'application/json'
-                    }
+    
+    def get_token_user(self, username):
+        url = f"{self.base_url}/user/{username}/token"
+        response = requests.get(url)
+        if response.status_code == 200:
+            result = response.json()
+            return result['token']
+        else:
+            return None
+      
     # Hàm để lấy tất cả người dùng
     def get_users(self):
         url = f"{self.base_url}/users"
-        response = requests.get(url, headers=self.headers)
+        response = requests.get(url)
         if response.status_code == 200:
             return response.json()
         else:
             return None
 
     # Hàm để thêm người dùng mới
-    def add_user(self, username, password, link_icon):
+    def add_user(self, username, password, link_icon, token):
         url = f"{self.base_url}/user"
         data = {
             'username': username,
             'password': password,
-            'link_icon': link_icon
+            'link_icon': link_icon,
+            'token': token
         }
-        response = requests.post(url, headers=self.headers, json=data)
+        response = requests.post(url, json=data)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return None
+    
+    def add_token_valid(self, token):
+        url = f"{self.base_url}/add-valid-token"
+        data = {
+            'token': token
+        }
+        response = requests.post(url, json=data)
         if response.status_code == 200:
             return response.json()
         else:
             return None
 
     # Hàm để cập nhật link_icon của người dùng
-    def update_link_icon(self, username, link_icon):
+    def update_link_icon(self, username, link_icon, token):
         url = f"{self.base_url}/user/{username}/link_icon"
         data = {
             'link_icon': link_icon
         }
-        response = requests.put(url, headers=self.headers, json=data)
+        headers = {
+                    'Authorization': token,
+                    'Content-Type': 'application/json'
+                }
+        response = requests.put(url, headers=headers, json=data)
         if response.status_code == 200:
             return response.json()
         else:
             return None
 
     # Hàm để cập nhật mật khẩu của người dùng
-    def update_password(self, username, password):
+    def update_password(self, username, password, token):
         url = f"{self.base_url}/user/{username}/password"
         data = {
             'password': password
         }
-        response = requests.put(url, headers=self.headers, json=data)
+        headers = {
+                    'Authorization': token,
+                    'Content-Type': 'application/json'
+                }
+        response = requests.put(url, headers=headers, json=data)
         if response.status_code == 200:
             return response.json()
         else:
             return None
 
     # Hàm để lấy mật khẩu của người dùng
-    def get_user_password(self, username):
+    def get_user_password(self, username, token):
         url = f"{self.base_url}/user/{username}/password"
-        response = requests.get(url, headers=self.headers)
+        headers = {
+                    'Authorization': token,
+                    'Content-Type': 'application/json'
+                }
+        response = requests.get(url, headers=headers)
         if response.status_code == 200:
             result = response.json()
             return result['password']
@@ -69,9 +98,13 @@ class DataUsers:
             return None
 
     # Hàm để lấy link_icon của người dùng
-    def get_user_link_icon(self, username):
+    def get_user_link_icon(self, username, token):
         url = f"{self.base_url}/user/{username}/link_icon"
-        response = requests.get(url, headers=self.headers)
+        headers = {
+                    'Authorization': token,
+                    'Content-Type': 'application/json'
+                }
+        response = requests.get(url, headers=headers)
         if response.status_code == 200:
             result = response.json()
             return result['link_icon']
@@ -79,9 +112,13 @@ class DataUsers:
             return None
 
     # Hàm để lấy ID của người dùng
-    def get_id_user(self, username):
+    def get_id_user(self, username, token):
         url = f"{self.base_url}/user/{username}/id_user"
-        response = requests.get(url, headers=self.headers)
+        headers = {
+                    'Authorization': token,
+                    'Content-Type': 'application/json'
+                }
+        response = requests.get(url, headers=headers)
         if response.status_code == 200:
             result = response.json()
             return result['id_user']
@@ -91,7 +128,7 @@ class DataUsers:
     # Hàm để lấy tất cả đánh giá của một tuyến đường
     def get_reviews_of_route(self, id_route):
         url = f"{self.base_url}/reviews/{id_route}"
-        response = requests.get(url, headers=self.headers)
+        response = requests.get(url)
         if response.status_code == 200:
             result = response.json()
             return result['result']
@@ -99,7 +136,7 @@ class DataUsers:
             return None
     
     # Hàm để thêm đánh giá mới
-    def add_review(self, id_user, id_route, star_vote, comment):
+    def add_review(self, id_user, id_route, star_vote, comment, token):
         url = f"{self.base_url}/review"
         data = {
             'id_user': id_user,
@@ -107,8 +144,12 @@ class DataUsers:
             'star_vote': star_vote,
             'comment': comment
         }
+        headers = {
+                    'Authorization': token,
+                    'Content-Type': 'application/json'
+                }
         try:
-            response = requests.post(url, headers=self.headers, json=data)
+            response = requests.post(url, headers=headers, json=data)
             response.raise_for_status()  # Kiểm tra lỗi HTTP
             if response.status_code == 200:
                 return response.json()
@@ -147,9 +188,9 @@ if __name__ == "__main__":
     # print(password)
     users_data = []
     for res in results:
-        user = [res['id'], res['username'], res['password'], res['link_icon']]
+        user = [res['id'], res['username'], res['password'], res['link_icon'], res['token']]
         users_data.append(user)
-    users_headers = ["ID", "Username", "Password", "Link Icon"]
+    users_headers = ["ID", "Username", "Password", "Link Icon", "token"]
     # review_headers = ["ID", "ID_User", "Star vote", "Comment"]
     
     view = EmployeeTableView(users_data, users_headers)

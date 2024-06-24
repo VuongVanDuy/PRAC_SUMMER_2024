@@ -1,26 +1,27 @@
 import sys
 import hashlib
 import os
+import secrets
 from PyQt5.QtWidgets import QFrame, QLabel, QHBoxLayout, QPushButton, QApplication, QMessageBox, QFileDialog
 from PyQt5.QtCore import QSize, Qt, pyqtSignal
 from PyQt5.QtGui import QIcon, QPixmap
 from ..authen import AuthWidget
 from ..data_app import *
+from .UI_update import updateUI
 
 class header_frame(QFrame):
-    status_logined = pyqtSignal(bool, str)
+    status_logined = pyqtSignal(dict)
     
     def __init__(self):
         super().__init__()
-        self.info_update = None
         self.info_login = {
             'status': False,
             'username': None,
-            'password': None
+            'token': None
         }
         self.data_users = DataUsers()
+        self.data_update = data_update()
         self.initUI()
-        self.login_button.clicked.connect(self.showLogin)
     
     def initUI(self):
         # Set the frame for the green background
@@ -54,20 +55,38 @@ class header_frame(QFrame):
                 background-color: #007E5C;
             }
         """)
+        self.login_button.clicked.connect(self.showLogin)
         self.header_frame_layout.addWidget(self.login_button)
         
         self.update_btn = QPushButton()
+        self.update_btn.setFixedSize(40, 40)
         self.update_btn.setIcon(QIcon('./pictures/update.png'))
         self.update_btn.setIconSize(QSize(40, 40))
-        self.update_btn.setStyleSheet("border: none;")
-        if self.info_update:
-            self.update_btn.setVisible(self.info_update['status'])
+        self.update_btn.setStyleSheet("""
+            QPushButton {
+                border: none;
+                color: white;
+                background-color: #00A76F;
+                padding: 15px;
+                border-radius: 20px;
+            }
+            QPushButton:hover {
+                background-color: #007E5C;
+            }
+        """)
         self.header_frame_layout.addWidget(self.update_btn)
+        self.info_update = self.data_update.get_info_update()
+        if self.info_update:
+            self.update_btn.setVisible(not self.info_update['status'])
+            self.update_btn.clicked.connect(self.update_data_from_api)
         
         self.setLayout(self.header_frame_layout)
     
-    def update_static_data(self):
-        pass
+    def update_data_from_api(self):
+        self.ui_update = updateUI()
+        self.ui_update.finishedUp.connect(lambda: self.update_btn.setVisible(not bool))
+        self.ui_update.show()
+                              
     def showLogin(self):
         self.auth_widget = AuthWidget()
         self.auth_widget.show()
@@ -82,7 +101,8 @@ class header_frame(QFrame):
         return sha256.hexdigest()
 
     def acceptLogin(self, username, password):
-        hash_password_true = self.data_users.get_user_password(username)
+        token = self.data_users.get_token_user(username)
+        hash_password_true = self.data_users.get_user_password(username, token)
         hash_password_check = self.sha256_hash(password)
         
         if hash_password_true is None:
@@ -98,11 +118,11 @@ class header_frame(QFrame):
             QMessageBox.information(self.auth_widget, 'Login Successful', 'Login successful!')
             self.info_login['status'] = True
             self.info_login['username'] = username
-            self.info_login['password'] = password
-            self.status_logined.emit(True, self.info_login['username'])
+            self.info_login['token'] = token
+            self.status_logined.emit(self.info_login)
             self.login_button.setText(' Выйти')
             self.icon_btn = QPushButton()
-            link_icon = self.data_users.get_user_link_icon(username)
+            link_icon = self.data_users.get_user_link_icon(username, token)
             self.icon_btn.setIcon(QIcon(link_icon))
             self.icon_btn.setFixedSize(30, 30)  
             self.icon_btn.setIconSize(QSize(30, 30))
@@ -127,7 +147,9 @@ class header_frame(QFrame):
             self.login_button.clicked.disconnect(self.showLogin)
     
     def added_new_user(self, username, password, link_icon='./pictures/avatar_default.png'):
-        if self.data_users.add_user(username, password, link_icon):
+        token = secrets.token_hex(64)
+        if self.data_users.add_user(username, password, link_icon, token):
+            self.data_users.add_token_valid(token)
             QMessageBox.information(self.auth_widget, 'Registration Successful', f'User {username} registered successfully!')
         else:
             QMessageBox.warning(self.auth_widget, 'Registration Failed', f'User {username} already exists!')
@@ -143,7 +165,7 @@ class header_frame(QFrame):
             dir_root_file = os.path.dirname(file_path)
             dir_root_dir = os.path.dirname(dir_root_file)
             relative_path = './' + os.path.relpath(file_path, dir_root_dir).replace('\\', '/')
-            self.data_users.update_link_icon(self.info_login['username'], relative_path)
+            self.data_users.update_link_icon(self.info_login['username'], relative_path, token=self.info_login['token'])
             QMessageBox.information(self, 'Change Icon Successful', 'Change icon successful!')
     
     def logout(self):
@@ -151,8 +173,8 @@ class header_frame(QFrame):
         if confirm_logout:
             self.info_login['status'] = False
             self.info_login['username'] = None
-            self.info_login['password'] = None
-            self.status_logined.emit(False, self.info_login['username'])
+            self.info_login['token'] = None
+            self.status_logined.emit(self.info_login)
             self.login_button.setText('Авторизоваться')
             self.header_frame_layout.removeWidget(self.icon_btn)
             del self.icon_btn

@@ -41,6 +41,9 @@ class CustomWidget(QWidget):
             QPushButton:pressed {
                 background-color: #aaaaaa;
             }
+            QPushButton:hover {
+                background-color: #007E5C;
+            }
         """
         highlight_style = """
             QPushButton {

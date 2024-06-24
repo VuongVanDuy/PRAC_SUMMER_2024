@@ -1,9 +1,6 @@
 import sys
-import hashlib
-import os
-from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QStackedWidget, QMessageBox, QPushButton, QFileDialog)
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QStackedWidget
 from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import QSize
 from .login import LoginForm
 from .register import RegisterForm
 

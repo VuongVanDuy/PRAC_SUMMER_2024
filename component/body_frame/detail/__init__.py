@@ -5,38 +5,60 @@ from .tab2 import tab2
 from .tab3 import tab3
 from .tab4 import tab4
 from .tab4.write_review import ReviewForm
+from ...data_app import *
 
 class DetailRoute(QWidget):
     changedAddr = pyqtSignal(str)
     changedDirection = pyqtSignal(int)
     
-    def __init__(self, info_route, status_login, data_users):
+    def __init__(self, info_route=None):
         super().__init__()
-        self.info_route = info_route
-        self.status_login = status_login['status']
-        self.username = status_login['username']
-        self.data_users = data_users
         
-        self.routeId = self.info_route.routeId
-        self.direction = self.info_route.direction
-        self.stops = list(self.info_route.get_stops_of_route().keys())
+        self.status_login = False
+        self.username = None
+        self.token = None
+        self.data_users = DataUsers()
+        self.set_info_cur_route(info_route=info_route)
         
         self.setFixedWidth(470)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
-        layout = QVBoxLayout(self)
+        self.main_widget_layout = QVBoxLayout(self)
         self.frame_detail = QFrame()
+        self.frame_detail_layout = QVBoxLayout(self.frame_detail)
         self.create_frame()
-        layout.addWidget(self.frame_detail)
-        self.setLayout(layout)  
+        self.main_widget_layout.addWidget(self.frame_detail)
+        self.setLayout(self.main_widget_layout)  
 
+    def set_info_cur_route(self, info_route):
+        if info_route is not None:
+            self.info_route = info_route
+            self.routeId = self.info_route.routeId
+            self.direction = self.info_route.direction
+            self.stops = list(self.info_route.get_stops_of_route().keys())
+        else:
+            try:
+                self.info_route = init_data_route(routeId=1062, direction=0)
+                self.routeId = self.info_route.routeId
+                self.direction = self.info_route.direction
+                self.stops = list(self.info_route.get_stops_of_route().keys())
+            except Exception as e:
+                print(e)
+                return
+        
+    def update_frame_detail(self, new_cur_route):
+        self.set_info_cur_route(new_cur_route)
+        self.frame_detail_layout.removeWidget(self.widget)
+        self.create_frame()
+        #self.update_direction(new_cur_route)
     
-    def update_status_login(self, status_login, username):
-        self.status_login = status_login
-        self.username = username
+    def update_status_login(self, status_logined):
+        self.status_login = status_logined['status']
+        self.username = status_logined['username']
+        self.token = status_logined['token']
         
     def create_frame(self):
-        widget = QWidget()
-        layout_widget = QHBoxLayout(widget)
+        self.widget = QWidget()
+        layout_widget = QHBoxLayout(self.widget)
         # Left panel for route information
         
         left_panel = QFrame()
@@ -77,9 +99,9 @@ class DetailRoute(QWidget):
         layout_widget.addWidget(left_panel)
        # layout_widget.addWidget(tab_widget)
         
-        main_layout = QVBoxLayout(self.frame_detail)
-        main_layout.addWidget(widget)
-        self.frame_detail.setLayout(main_layout)
+        
+        self.frame_detail_layout.addWidget(self.widget)
+        self.frame_detail.setLayout(self.frame_detail_layout)
         
     
     def create_tab1(self):
@@ -117,8 +139,8 @@ class DetailRoute(QWidget):
         self.tab4.reviewWidget.write_review_button.clicked.connect(self.write_review)
         
     def write_review(self):
-        if self.status_login:
-            link_icon = self.data_users.get_user_link_icon(self.username)
+        if self.status_login and self.token:
+            link_icon = self.data_users.get_user_link_icon(self.username, self.token)
             self.review_form = ReviewForm(self.routeId, self.username, link_icon)
             self.review_form.show()
             self.review_form.request_review.connect(self.add_review)
@@ -126,8 +148,8 @@ class DetailRoute(QWidget):
             QMessageBox.warning(self, 'Оценка', 'Вы должны войти в систему, чтобы оценить маршрут')
 
     def add_review(self, rating, comment):
-        id_user = self.data_users.get_id_user(self.username)
-        self.data_users.add_review(id_user, self.routeId, rating, comment)
+        id_user = self.data_users.get_id_user(self.username, self.token)
+        self.data_users.add_review(id_user, self.routeId, rating, comment, self.token)
         
         result = self.data_users.get_reviews_of_route(self.routeId) #fetch_all_reviews_of_route
         reviews = []
@@ -137,14 +159,6 @@ class DetailRoute(QWidget):
         self.tab4.reviewWidget.reviews = reviews
         self.tab4.reviewWidget.set_list_reviews()
         self.review_form.close()
-        
-    def toggle_visibility(self):
-        if self.scroll_frame.isVisible():
-            self.scroll_frame.setVisible(False)
-            self.hide_button.setText('▶')
-        else:
-            self.scroll_frame.setVisible(True)
-            self.hide_button.setText('◀')
     
     def on_button_click(self):
         sender = self.sender()
