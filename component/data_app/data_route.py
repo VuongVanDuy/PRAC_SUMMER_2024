@@ -70,17 +70,15 @@ def get_all_routesId():
 
 def get_info_general_routes():
     with open('./data/routes.json', 'r', encoding='utf-8') as file:
-            data = json.load(file)
+            data = json.load(file)['result']
             
-    data_all_routes = {}
-    for i in range(len(data['result'])):
-        data_all_routes[data['result'][i]['id']] = data['result'][i]['long_name']
+    data_all_routes = []
+    Ids = get_all_routesId()
+    for route in data:
+        if route['id'] in Ids:
+            data_all_routes.append([int(route['id']), route['long_name'], route['ticket'], route['time']])
     
-    routes = []
-    routesId = get_all_routesId()
-    for routeId in routesId:
-        routes.append([int(routeId), data_all_routes[routeId], '6:00 - 24:00', '60 рублей (к. Виза) - 45 рублей (к. Мир)'])
-    return routes  
+    return data_all_routes  
 
 BASE_URl = 'http://127.0.0.1:5000'
 
