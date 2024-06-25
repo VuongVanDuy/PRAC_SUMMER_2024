@@ -1,7 +1,4 @@
-import sys
-import hashlib
-import os
-import secrets
+import sys, os
 from PyQt5.QtWidgets import QFrame, QLabel, QHBoxLayout, QPushButton, QApplication, QMessageBox, QFileDialog
 from PyQt5.QtCore import QSize, Qt, pyqtSignal
 from PyQt5.QtGui import QIcon, QPixmap
@@ -11,6 +8,7 @@ from .UI_update import updateUI
 
 class header_frame(QFrame):
     status_logined = pyqtSignal(dict)
+    finished_update = pyqtSignal(list)
     
     def __init__(self):
         super().__init__()
@@ -84,37 +82,23 @@ class header_frame(QFrame):
     
     def update_data_from_api(self):
         self.ui_update = updateUI()
-        self.ui_update.finishedUp.connect(lambda: self.update_btn.setVisible(not bool))
         self.ui_update.show()
-                              
+        self.ui_update.finishedUp.connect(self.on_finished_update)
+    
+    def on_finished_update(self, status):
+        self.update_btn.setVisible(not status)
+        all_routes = get_info_general_routes()
+        self.finished_update.emit(all_routes)
+                       
     def showLogin(self):
         self.auth_widget = AuthWidget()
         self.auth_widget.show()
         self.auth_widget.login_form.check_login.connect(self.acceptLogin)
         self.auth_widget.register_form.check_register.connect(self.added_new_user)
-    
-    def sha256_hash(self, data):
-        data_bytes = data.encode('utf-8')
-        sha256 = hashlib.sha256()
-        sha256.update(data_bytes)
-    
-        return sha256.hexdigest()
 
     def acceptLogin(self, username, password):
-        token = self.data_users.get_token_user(username)
-        hash_password_true = self.data_users.get_user_password(username, token)
-        hash_password_check = self.sha256_hash(password)
-        
-        if hash_password_true is None:
-            QMessageBox.warning(self.auth_widget, 'Login Failed', 'User does not exist!')
-            self.auth_widget.login_form.username_input.clear()
-            self.auth_widget.login_form.password_input.clear()
-            return
-        elif hash_password_true != hash_password_check:
-            QMessageBox.warning(self.auth_widget, 'Login Failed', 'Password is incorrect!')
-            self.auth_widget.login_form.password_input.clear()
-            return
-        else:
+        token, status = self.data_users.check_login_and_get_token(username, password)
+        if status:
             QMessageBox.information(self.auth_widget, 'Login Successful', 'Login successful!')
             self.info_login['status'] = True
             self.info_login['username'] = username
@@ -145,11 +129,14 @@ class header_frame(QFrame):
             del self.auth_widget
             self.login_button.clicked.connect(self.logout)
             self.login_button.clicked.disconnect(self.showLogin)
+        else:
+            QMessageBox.warning(self.auth_widget, 'Login Failed', 'Username or password is incorrect!')
+            self.auth_widget.login_form.username_input.clear()
+            self.auth_widget.login_form.password_input.clear()
+            return
     
     def added_new_user(self, username, password, link_icon='./pictures/avatar_default.png'):
-        token = secrets.token_hex(64)
-        if self.data_users.add_user(username, password, link_icon, token):
-            self.data_users.add_token_valid(token)
+        if self.data_users.add_user(username, password, link_icon):
             QMessageBox.information(self.auth_widget, 'Registration Successful', f'User {username} registered successfully!')
         else:
             QMessageBox.warning(self.auth_widget, 'Registration Failed', f'User {username} already exists!')

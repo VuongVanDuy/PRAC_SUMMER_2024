@@ -39,23 +39,7 @@ class frame_tabs(QFrame):
         
         self.scroll_content = QWidget()
         self.scroll_content_layout = QVBoxLayout(self.scroll_content)
-
-        # Add search bar
-        self.search_bar = QLineEdit()
-        self.search_bar.setPlaceholderText("Поиск автобусных маршрутов")
-        self.scroll_content_layout.addWidget(self.search_bar)
-
-        # Add bus info widgets
-        self.buttons = []
-        if self.all_routes:
-            for route in self.all_routes:
-                button = self.create_bus_info(route[0], route[1], route[2], route[3])
-                self.buttons.append(button)
-                self.scroll_content_layout.addWidget(button)
-                
-        for i in range(len(self.buttons)):
-            self.buttons[i].clicked.connect(self.on_clicked_button)
-        
+        self.set_scroll_content_layout()
         self.scroll_area.setWidget(self.scroll_content)
         
         # Add scroll area to the scroll frame layout
@@ -79,6 +63,33 @@ class frame_tabs(QFrame):
         self.setLayout(self.frame_layout)
         self.adjustSize()
     
+    def set_scroll_content_layout(self):
+        if self.scroll_content_layout is not None:
+            while self.scroll_content_layout.count():
+                child = self.scroll_content_layout.takeAt(0)
+                if child.widget() is not None:
+                    child.widget().deleteLater()
+        
+        # Add search bar
+        self.search_bar = QLineEdit()
+        self.search_bar.setPlaceholderText("Поиск автобусных маршрутов")
+        self.scroll_content_layout.addWidget(self.search_bar)
+
+        # Add bus info widgets
+        self.buttons = []
+        if self.all_routes:
+            for route in self.all_routes:
+                button = self.create_bus_info(route[0], route[1], route[2], route[3])
+                self.buttons.append(button)
+                self.scroll_content_layout.addWidget(button)
+                
+        for i in range(len(self.buttons)):
+            self.buttons[i].clicked.connect(self.on_clicked_button)
+    
+    def reset_list_btns(self, new_list_routes):
+        self.all_routes = new_list_routes
+        self.set_scroll_content_layout()
+            
     def create_bus_info(self, route, description, time, price):
         button = QPushButton()
         button.setFixedHeight(120)

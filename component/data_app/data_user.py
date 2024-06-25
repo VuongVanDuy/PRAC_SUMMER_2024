@@ -7,14 +7,19 @@ class DataUsers:
     def __init__(self):
         self.base_url = 'http://127.0.0.1:5000'
     
-    def get_token_user(self, username):
-        url = f"{self.base_url}/user/{username}/token"
-        response = requests.get(url)
+    def check_login_and_get_token(self, username, password):
+        url = f"{self.base_url}/login"
+        data = {
+            'username': username,
+            'password': password
+        }
+        response = requests.post(url, json=data)
+
         if response.status_code == 200:
-            result = response.json()
-            return result['token']
+            token = response.json()['access_token']
+            return token, True
         else:
-            return None
+            return None, False
       
     # Hàm để lấy tất cả người dùng
     def get_users(self):
@@ -26,24 +31,12 @@ class DataUsers:
             return None
 
     # Hàm để thêm người dùng mới
-    def add_user(self, username, password, link_icon, token):
+    def add_user(self, username, password, link_icon):
         url = f"{self.base_url}/user"
         data = {
             'username': username,
             'password': password,
             'link_icon': link_icon,
-            'token': token
-        }
-        response = requests.post(url, json=data)
-        if response.status_code == 200:
-            return response.json()
-        else:
-            return None
-    
-    def add_token_valid(self, token):
-        url = f"{self.base_url}/add-valid-token"
-        data = {
-            'token': token
         }
         response = requests.post(url, json=data)
         if response.status_code == 200:
@@ -58,8 +51,7 @@ class DataUsers:
             'link_icon': link_icon
         }
         headers = {
-                    'Authorization': token,
-                    'Content-Type': 'application/json'
+                    'Authorization': f'Bearer {token}'
                 }
         response = requests.put(url, headers=headers, json=data)
         if response.status_code == 200:
@@ -74,8 +66,7 @@ class DataUsers:
             'password': password
         }
         headers = {
-                    'Authorization': token,
-                    'Content-Type': 'application/json'
+                    'Authorization': f'Bearer {token}'
                 }
         response = requests.put(url, headers=headers, json=data)
         if response.status_code == 200:
@@ -87,8 +78,7 @@ class DataUsers:
     def get_user_password(self, username, token):
         url = f"{self.base_url}/user/{username}/password"
         headers = {
-                    'Authorization': token,
-                    'Content-Type': 'application/json'
+                    'Authorization': f'Bearer {token}'
                 }
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
@@ -101,8 +91,7 @@ class DataUsers:
     def get_user_link_icon(self, username, token):
         url = f"{self.base_url}/user/{username}/link_icon"
         headers = {
-                    'Authorization': token,
-                    'Content-Type': 'application/json'
+                    'Authorization': f'Bearer {token}'
                 }
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
@@ -115,8 +104,7 @@ class DataUsers:
     def get_id_user(self, username, token):
         url = f"{self.base_url}/user/{username}/id_user"
         headers = {
-                    'Authorization': token,
-                    'Content-Type': 'application/json'
+                    'Authorization': f'Bearer {token}'
                 }
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
@@ -145,8 +133,7 @@ class DataUsers:
             'comment': comment
         }
         headers = {
-                    'Authorization': token,
-                    'Content-Type': 'application/json'
+                    'Authorization': f'Bearer {token}'
                 }
         try:
             response = requests.post(url, headers=headers, json=data)

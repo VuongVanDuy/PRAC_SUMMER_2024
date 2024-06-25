@@ -64,7 +64,7 @@ class body_frame(QFrame):
         lon = stops_of_route[newAddr][1]
         # Call JavaScript function to update marker location
         self.frame_view.map.page().runJavaScript(f"updateMarker({lat}, {lon});")
-        
+    
     def backMainTabs(self):
         self.showRoute('./map/map_spb.html')
         self.detail_widget.setVisible(False)

@@ -1,4 +1,4 @@
-import sys
+import sys, re
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QMessageBox)
 from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtCore import Qt, QSize, pyqtSignal
@@ -120,8 +120,12 @@ class RegisterForm(QWidget):
         username = self.username_input.text()
         password = self.password_input.text()
         confirm_password = self.confirm_password_input.text()
-
-        if len(username) < 6:
+        
+        check_name = bool(re.match(r'^[a-zA-Z0-9_]+$', username))
+        check_pass = bool(re.match(r'^[a-zA-Z0-9_]+$', password))
+        if not check_name or not check_pass:
+            QMessageBox.warning(self, 'Registration Failed', 'Username or password cannot contain special characters\n (only upper and lower case letters or underscores)!')
+        elif len(username) < 6:
             QMessageBox.warning(self, 'Registration Failed', 'Username must be at least 6 characters long')
         elif password != confirm_password:
             QMessageBox.warning(self, 'Registration Failed', 'Passwords do not match')

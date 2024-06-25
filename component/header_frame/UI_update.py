@@ -6,6 +6,7 @@ from .update import UpdateThread
 
 class updateUI(QWidget):
     finishedUp = pyqtSignal(bool)
+    
     def __init__(self):
         super().__init__()
         self.setWindowIcon(QIcon('./pictures/update.png'))

@@ -29,6 +29,7 @@ class BusMapApp(QMainWindow):
         self.main_layout.addLayout(self.body_layout)
         
         self.header_frame.status_logined.connect(self.body_frame.detail_widget.update_status_login)
+        self.header_frame.finished_update.connect(self.body_frame.frame_tabs.reset_list_btns)
     
 if __name__ == '__main__':
     app = QApplication(sys.argv)

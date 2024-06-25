@@ -37,7 +37,7 @@ class DetailRoute(QWidget):
             self.stops = list(self.info_route.get_stops_of_route().keys())
         else:
             try:
-                self.info_route = init_data_route(routeId=1062, direction=0)
+                self.info_route = init_data_route(routeId=1064, direction=0)
                 self.routeId = self.info_route.routeId
                 self.direction = self.info_route.direction
                 self.stops = list(self.info_route.get_stops_of_route().keys())

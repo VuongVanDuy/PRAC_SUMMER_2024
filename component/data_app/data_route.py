@@ -80,6 +80,16 @@ def get_info_general_routes():
     
     return data_all_routes  
 
+def get_info_general_route_by_id(id_route):
+    with open('./data/routes.json', 'r', encoding='utf-8') as file:
+            data = json.load(file)['result']
+            
+    for route in data:
+        if route['id'] == str(id_route):
+            data_route = [int(route['id']), route['long_name'], route['ticket'], route['time']]
+            return data_route 
+    return None
+
 BASE_URl = 'http://127.0.0.1:5000'
 
 def get_info_update():
@@ -95,6 +105,6 @@ if __name__ == '__main__':
     #print(data_route.get_stops_of_route())
     res = data_route.get_coords_route()
     #print(data_route.data_stops)
-    print(get_info_general_routes())
+    print(get_info_general_route_by_id(1062))
 
 
