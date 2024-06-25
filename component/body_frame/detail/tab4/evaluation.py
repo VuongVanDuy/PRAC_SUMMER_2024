@@ -48,10 +48,10 @@ class ReviewWidget(QWidget):
         self.main_lay_out.addWidget(summary_label, alignment=Qt.AlignCenter)
 
         # Average Rating
-        average_layout = QHBoxLayout()
+        self.average_layout = QHBoxLayout()
         self.average_rating_label = QLabel(str(self.average_rating))
         self.average_rating_label.setFont(QFont('Arial', 38))
-        average_layout.addWidget(self.average_rating_label, alignment=Qt.AlignCenter)
+        self.average_layout.addWidget(self.average_rating_label, alignment=Qt.AlignCenter)
         
         #stars_label = QLabel('★★★★☆')
         stars_label = QLabel()
@@ -62,18 +62,17 @@ class ReviewWidget(QWidget):
                 stars_label.setText(stars_label.text()[:i] + '☆' + stars_label.text()[i+1:])
                 
         stars_label.setFont(QFont('Arial', 20))
-        #average_layout.addWidget(stars_label, alignment=Qt.AlignCenter)
-        average_layout.addWidget(stars_label)
+        self.average_layout.addWidget(stars_label)
         
         self.people_count = QLabel('Количество отзывов: ' + str(self.count_vote))
         self.people_count.setWordWrap(True)
         self.people_count.setFont(QFont('Arial', 10))
-        average_layout.addWidget(self.people_count, alignment=Qt.AlignCenter)
+        self.average_layout.addWidget(self.people_count, alignment=Qt.AlignCenter)
         
-        self.main_lay_out.addLayout(average_layout)
+        self.main_lay_out.addLayout(self.average_layout)
         
         # Rating Distribution
-        distribution_layout = QVBoxLayout()
+        self.distribution_layout = QVBoxLayout()
 
         for i, value in zip(range(5, 0, -1), self.rating_rate):
             bar_layout = QHBoxLayout()
@@ -84,9 +83,9 @@ class ReviewWidget(QWidget):
             bar.setValue(value)
             bar_layout.addWidget(bar)
             
-            distribution_layout.addLayout(bar_layout)
+            self.distribution_layout.addLayout(bar_layout)
         
-        self.main_lay_out.addLayout(distribution_layout)
+        self.main_lay_out.addLayout(self.distribution_layout)
         
         # Reviews Section Header
         reviews_label = QLabel('ОТЗЫВЫ')

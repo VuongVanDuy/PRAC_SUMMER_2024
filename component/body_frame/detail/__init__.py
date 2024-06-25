@@ -156,8 +156,12 @@ class DetailRoute(QWidget):
         for review in result:
             reviews.append([review['username'], review['star_vote'], review['comment'], review['time'], review['link_icon']])
             
-        self.tab4.reviewWidget.reviews = reviews
-        self.tab4.reviewWidget.set_list_reviews()
+        self.tab_widget.removeTab(3)
+        self.tab4.deleteLater()
+        self.tab4 = tab4(reviews)
+        self.tab_widget.addTab(self.tab4, "Оценка")
+        self.tab4.reviewWidget.write_review_button.clicked.connect(self.write_review)
+        self.tab_widget.setCurrentIndex(3)
         self.review_form.close()
     
     def on_button_click(self):
