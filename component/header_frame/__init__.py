@@ -97,7 +97,7 @@ class header_frame(QFrame):
         self.auth_widget.register_form.check_register.connect(self.added_new_user)
 
     def acceptLogin(self, username, password):
-        token, status = self.data_users.check_login_and_get_token(username, password)
+        token, status = self.data_users.login_and_get_token(username, password)
         if status:
             QMessageBox.information(self.auth_widget, 'Login Successful', 'Login successful!')
             self.info_login['status'] = True
@@ -136,7 +136,7 @@ class header_frame(QFrame):
             return
     
     def added_new_user(self, username, password, link_icon='./pictures/avatar_default.png'):
-        if self.data_users.add_user(username, password, link_icon):
+        if self.data_users.register(username, password, link_icon):
             QMessageBox.information(self.auth_widget, 'Registration Successful', f'User {username} registered successfully!')
         else:
             QMessageBox.warning(self.auth_widget, 'Registration Failed', f'User {username} already exists!')

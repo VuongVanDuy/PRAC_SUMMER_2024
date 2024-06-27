@@ -7,7 +7,7 @@ class DataUsers:
     def __init__(self):
         self.base_url = 'http://127.0.0.1:5000'
     
-    def check_login_and_get_token(self, username, password):
+    def login_and_get_token(self, username, password):
         url = f"{self.base_url}/login"
         data = {
             'username': username,
@@ -31,8 +31,8 @@ class DataUsers:
             return None
 
     # Hàm để thêm người dùng mới
-    def add_user(self, username, password, link_icon):
-        url = f"{self.base_url}/user"
+    def register(self, username, password, link_icon):
+        url = f"{self.base_url}/register"
         data = {
             'username': username,
             'password': password,
